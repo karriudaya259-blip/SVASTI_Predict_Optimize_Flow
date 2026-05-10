@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SVASTI – AI Urban Mobility Platform</title>
+    <!-- Google Fonts + Chart.js -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0c18;
+            font-family: 'Exo 2', sans-serif;
+            color: #e3e6f0;
+        }
+
+        /* background wrapper with fixed image */
+        .bg-wrap {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+        }
+        .bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 30%;
+            filter: brightness(0.25) saturate(1.3);
+        }
+        .bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(4,8,18,0.2) 0%, rgba(4,8,18,0.55) 50%, rgba(4,8,18,0.88) 100%);
+        }
+
+        /* main container */
+        .app {
+            position: relative;
+            z-index: 1;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 0 16px 60px;
+        }
+
+        /* cards & common styles */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 44px 0 30px;
+            gap: 12px;
+        }
+        .logo-ring {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2.5px solid #00c8ff;
+            box-shadow: 0 0 28px rgba(0,200,255,0.4);
+        }
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 20%;
+        }
+        .title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 60px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: #fff;
+            text-shadow: 0 0 40px rgba(0,200,255,0.45);
+            line-height: 1;
+        }
+        .sub {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            letter-spacing: 7px;
+            color: #00c8ff;
+            font-weight: 600;
+        }
+        .desc {
+            font-size: 14px;
+            color: rgba(180,210,230,0.6);
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        .card {
+            background: rgba(6,12,26,0.82);
+            border: 1px solid rgba(0,200,255,0.15);
+            border-radius: 16px;
+            padding: 22px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background: linear-gradient(90deg, #00c8ff, transparent);
+        }
+        .card-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: #00c8ff;
+            margin-bottom: 18px;
+            letter-spacing: 1px;
+        }
+        .grid2, .grid3 {
+            display: grid;
+            gap: 12px;
+        }
+        .grid2 { grid-template-columns: 1fr 1fr; }
+        .grid3 { grid-template-columns: 1fr 1fr 1fr; }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .label {
+            font-size: 11px;
+            color: rgba(180,210,230,0.55);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        input, select {
+            background: rgba(10,25,50,0.85);
+            border: 1px solid rgba(0,200,255,0.2);
+            padding: 11px 14px;
+            border-radius: 10px;
+            color: #e8f4f8;
+            width: 100%;
+            font-family: 'Exo 2', sans-serif;
+            font-size: 14px;
+            outline: none;
+        }
+        .journey-box {
+            background: rgba(0,200,255,0.04);
+            border: 1px solid rgba(0,200,255,0.2);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .slot-side {
+            flex: 1;
+        }
+        .slot-lbl {
+            font-size: 10px;
+            color: #00c8ff;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .slot-inp {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Rajdhani', sans-serif;
+            width: 100%;
+            outline: none;
+            letter-spacing: 0.5px;
+        }
+        .arrow {
+            color: #00c8ff;
+            font-size: 24px;
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .carpool-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .cp-btn, .cp-btn-active {
+            flex: 1;
+            padding: 10px 6px;
+            background: rgba(10,25,50,0.85);
+            border: 1px solid rgba(0,200,255,0.2);
+            border-radius: 9px;
+            color: rgba(180,210,230,0.55);
+            font-size: 13px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .cp-btn-active {
+            background: rgba(0,200,255,0.12);
+            border: 1px solid #00c8ff;
+            color: #00c8ff;
+        }
+        .main-btn {
+            width: 100%;
+            margin-top: 16px;
+            background: linear-gradient(135deg, #00c8ff, #0080aa);
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            color: #020c1a;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Rajdhani', sans-serif;
+            letter-spacing: 2px;
+            cursor: pointer;
+        }
+        .profile-bar {
+            background: rgba(6,12,26,0.82);
+            border: 1px solid rgba(0,200,255,0.15);
+            border-radius: 14px;
+            padding: 14px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            backdrop-filter: blur(12px);
+        }
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00c8ff, #ff6b2b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .profile-name { font-weight: 700; color: #fff; }
+        .profile-detail { font-size: 12px; color: rgba(180,210,230,0.55); margin-top: 2px; }
+        .logout-btn {
+            margin-left: auto;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(180,210,230,0.55);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .pred-grid {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .pred-card {
+            background: rgba(10,25,50,0.85);
+            border: 1px solid rgba(0,200,255,0.15);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+        .pred-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+            color: #00c8ff;
+            line-height: 1;
+        }
+        .pred-msg {
+            background: rgba(10,25,50,0.6);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 14px;
+            color: rgba(180,210,230,0.7);
+            white-space: pre-line;
+        }
+        .loc-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0,200,255,0.08);
+            border: 1px solid rgba(0,200,255,0.3);
+            border-radius: 20px;
+            padding: 3px 12px;
+            font-size: 11px;
+            color: #00c8ff;
+            margin-bottom: 14px;
+        }
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #00e676;
+        }
+        .hl-grid {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 10px;
+        }
+        .hl-card {
+            background: rgba(10,25,50,0.85);
+            border: 1px solid rgba(0,200,255,0.15);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+        .hl-icon { font-size: 22px; margin-bottom: 6px; }
+        .hl-name { font-size: 11px; color: rgba(180,210,230,0.5); margin-bottom: 4px; }
+        .hl-num { font-family: 'Rajdhani', sans-serif; font-size: 17px; font-weight: 700; color: #ff3d3d; }
+        .agent-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .agent-card {
+            background: rgba(10,25,50,0.85);
+            border: 1px solid rgba(0,200,255,0.15);
+            border-radius: 14px;
+            padding: 18px;
+            cursor: pointer;
+        }
+        .agent-active {
+            background: rgba(0,200,255,0.07);
+            border: 1px solid #00c8ff;
+        }
+        .agent-icon { font-size: 28px; margin-bottom: 6px; }
+        .agent-name { font-weight: 700; color: #e8f4f8; }
+        .agent-role { font-size: 11px; color: rgba(180,210,230,0.5); margin-top: 2px; }
+        .agent-out {
+            margin-top: 14px;
+            background: rgba(2,8,20,0.85);
+            border: 1px solid rgba(0,200,255,0.12);
+            border-radius: 10px;
+            padding: 14px;
+            font-size: 13px;
+            color: #00c8ff;
+            white-space: pre-line;
+        }
+        .audit {
+            background: rgba(2,6,16,0.9);
+            border: 1px solid rgba(0,200,255,0.12);
+            border-radius: 10px;
+            padding: 12px;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        .audit-entry { padding: 3px 0; border-bottom: 1px solid rgba(0,200,255,0.06); color: rgba(100,160,200,0.65); }
+        .audit-last { padding: 3px 0; color: #00c8ff; }
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 12px;
+        }
+        .impact-card {
+            background: rgba(10,25,50,0.85);
+            border: 1px solid rgba(0,200,255,0.12);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+        .impact-num { font-family: 'Rajdhani', sans-serif; font-size: 24px; font-weight: 700; color: #00e676; }
+        .map-frame { width: 100%; height: 300px; border-radius: 12px; border: none; display: block; }
+        .result-ok { background: rgba(0,230,118,0.08); border: 1px solid rgba(0,230,118,0.3); color: #00e676; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+        .result-warn { background: rgba(255,214,0,0.08); border: 1px solid rgba(255,214,0,0.3); color: #ffd600; border-radius: 10px; padding: 12px 16px; margin-top: 12px; }
+        footer { text-align: center; padding: 20px; font-size: 12px; color: rgba(180,210,230,0.4); letter-spacing: 1px; }
+        .chart-container { height: 200px; margin-top: 5px; }
+        @media (max-width: 780px) {
+            .title { font-size: 40px; }
+            .grid2, .grid3 { grid-template-columns: 1fr; }
+            .agent-grid { grid-template-columns: 1fr; }
+            .impact-grid { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="bg-wrap">
+    <img class="bg-img" src="svasti logo.jpeg" alt="background">
+    <div class="bg-overlay"></div>
+</div>
+<div class="app">
+    <!-- HERO -->
+    <div class="hero">
+        <div class="logo-ring"><img class="logo-img" src="svasti logo.jpeg" alt="SVASTI"></div>
+        <div class="title">SVASTI</div>
+        <div class="sub">PREDICT · OPTIMIZE · FLOW</div>
+        <div class="desc">India's AI-Powered Urban Mobility Platform</div>
+    </div>
+
+    <!-- dynamic content injected via JS -->
+    <div id="app-root"></div>
+    <footer>🚦 SVASTI · Predict. Optimize. Flow. · Built for Indian Cities · 2026</footer>
+</div>
+
+<script>
+    // ---------- DATA & CONSTANTS ----------
+    const DISTRICTS = {
+        "Andhra Pradesh": ["Visakhapatnam","Vijayawada","Guntur","Nellore","Kurnool","Rajahmundry","Tirupati","Kadapa","Anantapur","Eluru","Ongole","Nandyal","Chittoor","Srikakulam","Vizianagaram"],
+        "Telangana": ["Hyderabad","Secunderabad","Warangal","Nizamabad","Karimnagar","Khammam","Mahbubnagar","Nalgonda","Adilabad","Medak","Rangareddy","Sangareddy","Suryapet","Siddipet","Mancherial"],
+        "Karnataka": ["Bengaluru","Mysuru","Hubli","Mangaluru","Belagavi","Kalaburagi","Ballari","Vijayapura","Shivamogga","Tumkur","Davangere","Bidar","Raichur","Udupi","Chitradurga"],
+        "Tamil Nadu": ["Chennai","Coimbatore","Madurai","Tiruchirappalli","Salem","Tirunelveli","Vellore","Erode","Thoothukudi","Dindigul","Kancheepuram","Thanjavur","Cuddalore","Tiruppur","Krishnagiri"],
+        "Maharashtra": ["Mumbai","Pune","Nagpur","Nashik","Aurangabad","Solapur","Amravati","Kolhapur","Thane","Navi Mumbai","Pimpri-Chinchwad","Nanded","Sangli","Jalgaon","Akola"],
+        "Gujarat": ["Ahmedabad","Surat","Vadodara","Rajkot","Bhavnagar","Jamnagar","Gandhinagar","Anand","Morbi","Surendranagar","Mehsana","Bharuch","Navsari","Valsad","Patan"],
+        "Delhi": ["Central Delhi","North Delhi","South Delhi","East Delhi","West Delhi","New Delhi","North East Delhi","North West Delhi","South East Delhi","South West Delhi","Shahdara","Dwarka","Rohini","Pitampura","Vasant Kunj"],
+        "Rajasthan": ["Jaipur","Jodhpur","Udaipur","Kota","Bikaner","Ajmer","Bhilwara","Alwar","Bharatpur","Sikar","Pali","Tonk","Churu","Dausa","Nagaur"],
+        "Uttar Pradesh": ["Lucknow","Kanpur","Agra","Varanasi","Prayagraj","Meerut","Ghaziabad","Noida","Mathura","Bareilly","Aligarh","Moradabad","Saharanpur","Gorakhpur","Firozabad"],
+        "West Bengal": ["Kolkata","Howrah","Durgapur","Asansol","Siliguri","Malda","Bardhaman","Kharagpur","Haldia","Jalpaiguri","Cooch Behar","Darjeeling","Bankura","Purulia","Murshidabad"],
+        "Kerala": ["Thiruvananthapuram","Kochi","Kozhikode","Thrissur","Kollam","Kannur","Palakkad","Alappuzha","Malappuram","Kottayam","Kasaragod","Pathanamthitta","Idukki","Wayanad","Ernakulam"],
+        "Punjab": ["Chandigarh","Ludhiana","Amritsar","Jalandhar","Patiala","Bathinda","Mohali","Hoshiarpur","Gurdaspur","Ferozepur","Moga","Faridkot","Pathankot","Ropar","Sangrur"],
+        "Haryana": ["Gurugram","Faridabad","Panipat","Ambala","Yamunanagar","Rohtak","Hisar","Karnal","Sonipat","Panchkula","Bhiwani","Sirsa","Rewari","Kaithal","Jhajjar"],
+        "Madhya Pradesh": ["Bhopal","Indore","Gwalior","Jabalpur","Ujjain","Sagar","Dewas","Satna","Ratlam","Rewa","Murwara","Singrauli","Burhanpur","Khandwa","Bhind"],
+        "Bihar": ["Patna","Gaya","Bhagalpur","Muzaffarpur","Purnia","Darbhanga","Bihar Sharif","Arrah","Begusarai","Katihar","Munger","Chhapra","Danapur","Bettiah","Motihari"],
+        "Odisha": ["Bhubaneswar","Cuttack","Rourkela","Berhampur","Sambalpur","Puri","Balasore","Bhadrak","Baripada","Jharsuguda","Jeypore","Angul","Dhenkanal","Kendujhar","Rayagada"],
+        "Assam": ["Guwahati","Silchar","Dibrugarh","Jorhat","Nagaon","Tinsukia","Tezpur","Bongaigaon","Dhubri","Diphu","North Lakhimpur","Haflong","Goalpara","Karimganj","Sivasagar"],
+        "Chhattisgarh": ["Raipur","Bhilai","Bilaspur","Korba","Durg","Rajnandgaon","Jagdalpur","Ambikapur","Raigarh","Champa","Dhamtari","Mahasamund","Kanker","Janjgir","Kabirdham"],
+        "Jharkhand": ["Ranchi","Jamshedpur","Dhanbad","Bokaro","Deoghar","Hazaribagh","Giridih","Ramgarh","Medininagar","Chatra","Gumla","Simdega","Dumka","Godda","Pakur"]
+    };
+    const HELPLINES = {
+        "Andhra Pradesh": { police: "1095 / 0866-2575333", name: "AP Traffic Police" },
+        "Telangana": { police: "1095 / 040-27852400", name: "Hyderabad Traffic Police" },
+        "Karnataka": { police: "1095 / 080-22943225", name: "Karnataka Traffic Police" },
+        "Tamil Nadu": { police: "1095 / 044-23452345", name: "TN Traffic Police" },
+        "Maharashtra": { police: "1095 / 022-24937777", name: "Mumbai Traffic Police" },
+        "Gujarat": { police: "1095 / 079-25501234", name: "Gujarat Traffic Police" },
+        "Rajasthan": { police: "1095 / 0141-2741234", name: "Rajasthan Traffic Police" },
+        "Uttar Pradesh": { police: "1095 / 0522-2620500", name: "UP Traffic Police" },
+        "West Bengal": { police: "1095 / 033-22143234", name: "Kolkata Traffic Police" },
+        "Delhi": { police: "1095 / 011-25844444", name: "Delhi Traffic Police" },
+        "Kerala": { police: "1095 / 0471-2721547", name: "Kerala Traffic Police" },
+        "Punjab": { police: "1095 / 0172-2740050", name: "Punjab Traffic Police" },
+        "Haryana": { police: "1095 / 0172-2560026", name: "Haryana Traffic Police" },
+        "Madhya Pradesh": { police: "1095 / 0755-2443500", name: "MP Traffic Police" },
+        "Bihar": { police: "1095 / 0612-2201113", name: "Bihar Traffic Police" },
+        "Odisha": { police: "1095 / 0674-2392800", name: "Odisha Traffic Police" }
+    };
+    const HOURS = Array.from({length:24}, (_,i)=> i===0?"12AM": i<12 ? i+"AM" : i===12 ? "12PM" : (i-12)+"PM");
+    function isPeak(h) { return (h>=7 && h<=10) || (h>=17 && h<=20); }
+
+    // global state
+    let user = null;
+    let carpool = "no";
+    let state = "Telangana";
+    let district = "Hyderabad";
+    let helplineState = "Telangana";
+    let locationLabel = "Detecting...";
+    let liveCount = 2847;
+    let journeyHour = 12;
+    let auditLog = ["🟢 SVASTI online · AI agents ready", "📡 Monitoring active · Awaiting slot bookings"];
+    let agentMsg = "▶ Click any agent to activate real-time analysis";
+    let activeAgent = null;
+    let chartData = Array.from({length:24}, (_,i) => ({ h: HOURS[i], v: [60,40,35,80,350,820,950,700,420,380,460,720,650,430,360,400,600,880,940,700,420,260,160,90][i], peak: isPeak(i) }));
+    let chartInstance = null;
+
+    // prediction result
+    let pred = { congestion: "--", delay: "--", fuel: "--", msg: "Book a journey slot above to see your live traffic prediction." };
+    let resultMsg = null;
+
+    // helper
+    function getPred(hour, people, cp) {
+        if((hour>=8 && hour<=10) || (hour>=17 && hour<=19))
+            return { congestion:"86%", delay:"38 min", fuel: people>=3 ? "🌱 Excellent" : (cp!=="no" ? "🌱 Eco" : "📊 Standard"), msg: "🚨 HIGH CONGESTION · Leave 30 min early or take Metro" };
+        if(hour>=11 && hour<=16)
+            return { congestion:"42%", delay:"18 min", fuel: "📊 Standard", msg: "⚠️ MODERATE · Consider leaving 10 min earlier" };
+        return { congestion:"12%", delay:"6 min", fuel: "✅ Smooth", msg: "✅ LOW CONGESTION · Smooth journey expected!" };
+    }
+
+    function addAudit(msg) {
+        const ts = new Date().toLocaleTimeString("en-IN", {hour12: false});
+        auditLog = [...auditLog.slice(-19), `[${ts}] ${msg}`];
+        render();
+    }
+
+    function afterBook(name, vehicle, time, people, cp, from, to, date, st) {
+        const hour = parseInt((time || "12:00").split(":")[0]);
+        journeyHour = hour;
+        const p = getPred(hour, people, cp);
+        pred = { ...p, msg: `🚗 ${name}  (${vehicle}) · ${from} → ${to}\n📅 ${date||"Today"} at ${time} · 👥 ${people} traveler(s) · ${st}\n🔮 ${p.msg}` };
+        // update chart data
+        chartData = chartData.map((d,i) => i===hour ? {...d, v: Math.min(1400, d.v+20)} : d);
+        liveCount++;
+        localStorage.setItem("svasti_count", liveCount);
+        if(people>=3) addAudit(`⚙️ OPTIMIZER: HOV lane granted · ${vehicle} (${people} occupants)`);
+        if(cp!=="no") addAudit(`💬 NUDGE: Carpool search started for ${name}`);
+        updateChart();
+        render();
+    }
+
+    function showResult(msg, cls) {
+        resultMsg = { msg, cls };
+        render();
+        setTimeout(() => { resultMsg = null; render(); }, 3000);
+    }
+
+    // register logic
+    function handleRegister(formData) {
+        const { name, phone, vehicle, vehicleType, from, to, date, time, people, cp } = formData;
+        if(!name || !vehicle || !from || !to || !time) { showResult("⚠️ Please fill Name, Vehicle, From, To and Time.", "warn"); return false; }
+        user = { name, phone, vehicle, vehicleType, state, district, registeredOn: new Date().toLocaleDateString("en-IN") };
+        localStorage.setItem("svasti_user", JSON.stringify(user));
+        addAudit(`📝 NEW: ${name} | ${vehicle} | ${district}, ${state}`);
+        afterBook(name, vehicle, time, people, cp, from, to, date, state);
+        showResult(`✅ Registered! Slot booked. ${phone?`📱 SMS sent to ${phone}.`:""} ${cp!=="no"?"🤝 Carpool active!":""}`, "ok");
+        return true;
+    }
+
+    function handleBookJourney(from, to, date, time, people, cp) {
+        if(!user) return;
+        if(!from || !to || !time) { showResult("⚠️ Fill From, To and Time.", "warn"); return; }
+        addAudit(`📍 SLOT: ${user.name} | ${from} → ${to} | ${time}`);
+        afterBook(user.name, user.vehicle, time, people, cp, from, to, date, user.state);
+        showResult(`✅ Slot booked! ${cp!=="no"?"🤝 Carpool active.":"Safe travels!"}`, "ok");
+        render();
+    }
+
+    function agentClick(id) {
+        activeAgent = id;
+        const peak = (journeyHour>=8 && journeyHour<=10) || (journeyHour>=17 && journeyHour<=19);
+        const msgs = {
+            predictor: peak ? "🔮 PREDICTOR: HIGH CONGESTION (86%)\nLSTM confidence: 89%\nRecommendation: Shift departure ±30 min or use alternate route" : "🔮 PREDICTOR: LOW CONGESTION (12%)\nLSTM confidence: 94%\nCurrent window is optimal for travel",
+            optimizer: "⚙️ OPTIMIZER: Route optimized +8%\nSignal timing adjusted for 3 corridors\nHOV lane eligibility checked\nEstimated savings: 12-15 min (3+ occupants)",
+            nudge: peak ? "💬 NUDGE: Peak alert!\n• Leave 30 min early → save 25 min\n• Outer Ring Road: 18 min faster\n• Metro: fastest option\n• Carpool: saves ₹40 on toll" : "💬 NUDGE: Off-peak travel – great choice!\n• Maintain 50-60 km/h for optimal fuel\n• 0 carpool matches nearby right now",
+            verifier: `📊 VERIFIER AUDIT REPORT\n• ${liveCount.toLocaleString("en-IN")} slots booked today\n• 46% congestion reduction verified\n• 2,450L fuel saved · 5.8T CO₂ offset\n• 98.7% SLA compliance\n• 147 signal optimizations executed\n• 892 nudges delivered · 67 carpool matches`,
+        };
+        agentMsg = msgs[id] || "Agent activated";
+        addAudit(`🤖 ${id.toUpperCase()} agent activated`);
+        render();
+    }
+
+    // chart initialization
+    function initChart() {
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        if(chartInstance) chartInstance.destroy();
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: HOURS, datasets: [{ label: 'Vehicles per hour', data: chartData.map(d=>d.v), backgroundColor: chartData.map(d=> d.peak ? '#ff6b2b' : '#00c8ff'), borderRadius: 4 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#e3e6f0' } }, tooltip: { backgroundColor: '#0a1428' } }, scales: { y: { grid: { color: 'rgba(100,160,200,0.15)' }, ticks: { color: 'rgba(180,210,230,0.45)' } }, x: { ticks: { color: 'rgba(180,210,230,0.45)', font: { size: 10 } } } } }
+        });
+    }
+    function updateChart() {
+        if(chartInstance) {
+            chartInstance.data.datasets[0].data = chartData.map(d=>d.v);
+            chartInstance.data.datasets[0].backgroundColor = chartData.map(d=> d.peak ? '#ff6b2b' : '#00c8ff');
+            chartInstance.update();
+        }
+    }
+
+    // render full UI
+    function render() {
+        const root = document.getElementById('app-root');
+        const hl = HELPLINES[helplineState] || HELPLINES["Telangana"];
+        const districtsList = DISTRICTS[state] || [];
+        const isRegistered = !!user;
+        const predMsgSafe = pred.msg || "No prediction yet";
+        root.innerHTML = `
+            ${isRegistered ? `
+            <div class="profile-bar">
+                <div class="avatar">👤</div>
+                <div><div class="profile-name">${escapeHtml(user.name)} · ${escapeHtml(user.vehicle)}</div><div class="profile-detail">${escapeHtml(user.vehicleType?.toUpperCase()||'')} · ${escapeHtml(user.district)}, ${escapeHtml(user.state)} · Since ${user.registeredOn}</div></div>
+                <button class="logout-btn" id="logoutBtn">Logout</button>
+            </div>
+            ` : ''}
+            <div class="card">
+                <div class="card-accent"></div>
+                <div class="card-title">${isRegistered ? "👋 Welcome back! Book your journey" : "📝 Register & Book Journey Slot"}</div>
+                ${!isRegistered ? `
+                <div class="grid2">
+                    <div class="field"><span class="label">Full Name</span><input id="regName" placeholder="e.g. Ravi Kumar"></div>
+                    <div class="field"><span class="label">Mobile</span><input id="regPhone" type="tel" maxlength="10" placeholder="10-digit"></div>
+                    <div class="field"><span class="label">Vehicle Number</span><input id="regVehicle" placeholder="e.g. TS09AB1234"></div>
+                    <div class="field"><span class="label">Vehicle Type</span><select id="regVt"><option value="2w">Two Wheeler</option><option value="4w">Four Wheeler</option><option value="auto">Auto / Cab</option><option value="hv">Heavy Vehicle</option></select></div>
+                    <div class="field"><span class="label">State</span><select id="regState">${Object.keys(DISTRICTS).sort().map(s=>`<option ${s===state?'selected':''}>${s}</option>`).join('')}</select></div>
+                    <div class="field"><span class="label">District</span><select id="regDistrict">${districtsList.map(d=>`<option ${d===district?'selected':''}>${d}</option>`).join('')}</select></div>
+                    <div class="field"><span class="label">Travelers</span><input id="regPeople" type="number" value="1" min="1" max="8"></div>
+                </div>
+                <div style="margin-top:16px"><span class="label">Book Journey Slot</span></div>
+                <div class="journey-box"><div class="slot-side"><div class="slot-lbl">FROM</div><input class="slot-inp" id="regFrom" placeholder="Starting point..."></div><div class="arrow">→</div><div class="slot-side"><div class="slot-lbl">TO</div><input class="slot-inp" id="regTo" placeholder="Destination..."></div></div>
+                <div class="grid2"><div class="field"><span class="label">Date</span><input id="regDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><span class="label">Departure Time</span><input id="regTime" type="time"></div></div>
+                <div style="margin-top:14px"><span class="label">Carpool Preference</span><div class="carpool-row" id="carpoolGroup"><div data-cp="no" class="cp-btn ${carpool==='no'?'cp-btn-active':''}">🚗 Solo</div><div data-cp="open" class="cp-btn ${carpool==='open'?'cp-btn-active':''}">🤝 Open to Carpool</div><div data-cp="offer" class="cp-btn ${carpool==='offer'?'cp-btn-active':''}">🚘 Offering Ride</div></div></div>
+                <button class="main-btn" id="registerBtn">🚦 REGISTER & BOOK SLOT</button>
+                ` : `
+                <div class="journey-box"><div class="slot-side"><div class="slot-lbl">FROM</div><input class="slot-inp" id="bookFrom" placeholder="Starting point..."></div><div class="arrow">→</div><div class="slot-side"><div class="slot-lbl">TO</div><input class="slot-inp" id="bookTo" placeholder="Destination..."></div></div>
+                <div class="grid3"><div class="field"><span class="label">Date</span><input id="bookDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div class="field"><span class="label">Time</span><input id="bookTime" type="time"></div><div class="field"><span class="label">Travelers</span><input id="bookPeople" type="number" value="1" min="1" max="8"></div><div class="field" style="grid-column:1/-1"><span class="label">Carpool</span><select id="bookCp"><option value="no">Solo</option><option value="open">Open to Carpool</option><option value="offer">Offering Ride</option></select></div></div>
+                <button class="main-btn" id="bookBtn">📍 BOOK JOURNEY SLOT</button>
+                `}
+                ${resultMsg ? `<div class="${resultMsg.cls==='ok'?'result-ok':'result-warn'}">${escapeHtml(resultMsg.msg)}</div>` : ''}
+            </div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">🚦 Live Prediction</div><div class="pred-grid"><div class="pred-card"><div class="pred-val">${pred.congestion}</div><div class="pred-lbl">CONGESTION</div></div><div class="pred-card"><div class="pred-val">${pred.delay}</div><div class="pred-lbl">DELAY</div></div><div class="pred-card"><div class="pred-val" style="font-size:22px">${pred.fuel}</div><div class="pred-lbl">FUEL</div></div></div><div class="pred-msg">${predMsgSafe}</div></div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">🚨 Traffic Helpline</div><div class="loc-pill"><span class="dot"></span>${locationLabel}</div><div class="hl-grid"><div class="hl-card"><div class="hl-icon">🚔</div><div class="hl-name">${hl.name}</div><div class="hl-num">${hl.police}</div></div><div class="hl-card"><div class="hl-icon">🚑</div><div class="hl-name">Emergency</div><div class="hl-num">112</div></div><div class="hl-card"><div class="hl-icon">🛣️</div><div class="hl-name">Highway Patrol</div><div class="hl-num" style="color:#00e676">1033</div></div></div></div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">🗺️ Live Traffic Map</div><iframe class="map-frame" src="https://www.google.com/maps?q=${encodeURIComponent(district+' traffic')}&output=embed" allowFullScreen></iframe></div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">📊 Traffic Volume – 24 Hour Pattern</div><div class="chart-container"><canvas id="trafficChart"></canvas></div><div style="margin-top:8px; font-size:12px; color:rgba(180,210,230,0.5)">🟠 Orange = Peak hours · 🔵 Blue = Off-peak</div></div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">🤖 AI Agent Network</div><div class="agent-grid" id="agentGrid"></div><div class="agent-out" id="agentMsg">${agentMsg}</div></div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">📋 Audit Trail</div><div class="audit" id="auditDiv"></div></div>
+            <div class="card"><div class="card-accent"></div><div class="card-title">📈 Measurable Impact</div><div class="impact-grid" id="impactGrid"></div></div>
+        `;
+
+        // populate agents
+        const agentGrid = document.getElementById('agentGrid');
+        if(agentGrid) {
+            const agents = [{id:"predictor",icon:"🔮",name:"Predictor Agent",role:"LSTM · Congestion Forecasting"},
+                {id:"optimizer",icon:"⚙️",name:"Optimizer Agent",role:"Signal · Lane · Route"},
+                {id:"nudge",icon:"💬",name:"Nudge Agent",role:"Behavioral · Alerts · Carpool"},
+                {id:"verifier",icon:"📊",name:"Verifier Agent",role:"Audit · SLA · Compliance"}];
+            agentGrid.innerHTML = agents.map(a=>`<div class="agent-card ${activeAgent===a.id?'agent-active':''}" data-agent="${a.id}"><div class="agent-icon">${a.icon}</div><div class="agent-name">${a.name}</div><div class="agent-role">${a.role}</div></div>`).join('');
+            agents.forEach(a=>{ const el = agentGrid.querySelector(`[data-agent="${a.id}"]`); if(el) el.addEventListener('click',()=>agentClick(a.id)); });
+        }
+        // audit log
+        const auditDiv = document.getElementById('auditDiv');
+        if(auditDiv) auditDiv.innerHTML = auditLog.map((e,i)=>`<div class="${i===auditLog.length-1?'audit-last':'audit-entry'}">${e}</div>`).join('');
+        // impact
+        const impactGrid = document.getElementById('impactGrid');
+        if(impactGrid) impactGrid.innerHTML = [
+            {n:"-46%",l:"Peak Delay Reduction"},{n:"₹11,500 Cr",l:"Annual Savings"},{n:"15%",l:"Fuel Saved"},
+            {n:"5.8T",l:"CO₂ Reduced/Day"},{n:"98.7%",l:"SLA Compliance"},{n:`${liveCount.toLocaleString("en-IN")}+`,l:"Slots Booked Today"}
+        ].map(({n,l})=>`<div class="impact-card"><div class="impact-num">${n}</div><div class="impact-lbl">${l}</div></div>`).join('');
+
+        // attach event listeners after DOM
+        if(!isRegistered) {
+            document.getElementById('registerBtn')?.addEventListener('click', ()=>{
+                const name = document.getElementById('regName').value.trim();
+                const phone = document.getElementById('regPhone').value.trim();
+                const vehicle = document.getElementById('regVehicle').value.trim();
+                const vehicleType = document.getElementById('regVt').value;
+                const from = document.getElementById('regFrom').value.trim();
+                const to = document.getElementById('regTo').value.trim();
+                const date = document.getElementById('regDate').value;
+                const time = document.getElementById('regTime').value;
+                const people = parseInt(document.getElementById('regPeople').value) || 1;
+                const cp = carpool;
+                handleRegister({ name, phone, vehicle, vehicleType, from, to, date, time, people, cp });
+            });
+            const stateSelect = document.getElementById('regState');
+            const districtSelect = document.getElementById('regDistrict');
+            if(stateSelect) stateSelect.addEventListener('change', (e)=>{
+                state = e.target.value;
+                const newList = DISTRICTS[state] || [];
+                districtSelect.innerHTML = newList.map(d=>`<option>${d}</option>`).join('');
+                district = newList[0] || '';
+                render();
+            });
+            if(districtSelect) districtSelect.addEventListener('change', (e)=> { district = e.target.value; render(); });
+            // carpool group
+            document.querySelectorAll('#carpoolGroup .cp-btn').forEach(btn=>{
+                btn.addEventListener('click', (e)=>{
+                    carpool = btn.getAttribute('data-cp');
+                    render();
+                });
+            });
+        } else {
+            document.getElementById('bookBtn')?.addEventListener('click', ()=>{
+                const from = document.getElementById('bookFrom').value.trim();
+                const to = document.getElementById('bookTo').value.trim();
+                const date = document.getElementById('bookDate').value;
+                const time = document.getElementById('bookTime').value;
+                const people = parseInt(document.getElementById('bookPeople').value) || 1;
+                const cp = document.getElementById('bookCp').value;
+                handleBookJourney(from, to, date, time, people, cp);
+            });
+        }
+        document.getElementById('logoutBtn')?.addEventListener('click', ()=>{
+            localStorage.removeItem("svasti_user");
+            user = null; carpool="no"; state="Telangana"; district="Hyderabad"; pred = {congestion:"--",delay:"--",fuel:"--",msg:"Book a journey slot above to see your live traffic prediction."};
+            render();
+        });
+        if(!chartInstance) initChart(); else updateChart();
+    }
+
+    function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // load user from localStorage & geolocation
+    const savedUser = localStorage.getItem("svasti_user");
+    if(savedUser) user = JSON.parse(savedUser);
+    const savedCount = localStorage.getItem("svasti_count");
+    if(savedCount) liveCount = parseInt(savedCount);
+    // geolocation for helpline
+    if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos=>{
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json`)
+                .then(r=>r.json()).then(d=>{
+                    const st = d.address?.state || "Telangana";
+                    const matched = Object.keys(HELPLINES).find(k=>st.toLowerCase().includes(k.toLowerCase())) || "Telangana";
+                    helplineState = matched;
+                    locationLabel = d.address?.city || d.address?.town || district;
+                    render();
+                }).catch(()=>render());
+        }, ()=>render());
+    } else render();
+
+    render();
+</script>
+</body>
+</html>
